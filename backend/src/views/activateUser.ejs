@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Your Account - AlMuhsiny Blog</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .activation-code {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 22px;
+            font-weight: bold;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .content {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .footer p {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Assalamu'alaikum <%= user.name %>,</h1>
+            <p>Thank you for registering with AlMuhsiny Blog! To activate your account, please use the following activation code:</p>
+        </div>
+
+        <div class="activation-code"><%= activationCode %></div>
+
+        <div class="content">
+            <p>This code will expire in 30 minutes.</p>
+            <p>If you didn't register for this account, please ignore this email.</p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; <%= new Date().getFullYear() %> <a href="<%= blogUrl %>">AlMuhsiny Blog</a>. All Rights Reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
