@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user.model";
 import { createActivationToken } from "../../../utils/createActivationToken";
 import sendMail from "../../../utils/sendMail";
+import { setTokenCookie } from "../../../utils/setTokenCookie";
 
 // Register
 export interface IUserRegister {
@@ -86,8 +87,6 @@ export const activateUser = async (req: Request, res: Response): Promise<any> =>
       process.env.ACTIVATION_TOKEN_SECRET as string
     ) as { user: IUser; activationCode: string};
 
-    console.log(newUser);
-
     if (newUser.activationCode != activationCode) {
       return res.status(400).json({
         success: false,
@@ -123,6 +122,52 @@ export const activateUser = async (req: Request, res: Response): Promise<any> =>
     return res.status(500).json({
       success: false,
       message: "Activate failed",
+    });
+  }
+};
+
+// Login
+interface ILoginData {
+  email: string;
+  password: string;
+}
+
+export const loginUser = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email, password } = req.body as ILoginData;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password",
+      });
+    }
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    const isPasswordCorrect = await user.comparePassword(password);
+
+    if (!isPasswordCorrect) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
+    }
+
+    setTokenCookie(user, res);
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed",    
     });
   }
 };
