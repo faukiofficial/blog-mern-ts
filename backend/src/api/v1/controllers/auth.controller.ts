@@ -174,6 +174,51 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+// Google Login
+interface IGoogleLoginData {
+  email: string;
+  name: string;
+  picture: string;
+}
+
+export const googleLogin = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email, name, picture } = req.body as IGoogleLoginData;
+
+    if (!email || !name || !picture) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email, name and picture",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (user && user.picture && !user.picture.public_id) {
+      user.picture.url = picture;
+      user.save();
+      setTokenCookie(user, res);
+    } else {
+      const newUser = await User.create({
+        name,
+        email,
+        picture : {
+          url: picture
+        },
+      });
+
+      setTokenCookie(newUser, res);
+    }
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Google login failed",
+    });
+  }
+};
+
 // Logout
 export const logoutUser = async (req: any, res: Response): Promise<any> => {
   try {
