@@ -13,7 +13,7 @@ import { redis } from "../../../config/redis";
 export interface IUserRegister {
   name: string;
   email: string;
-  password: string;
+  password?: string;
 }
 
 export const registerUser = async (

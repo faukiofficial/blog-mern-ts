@@ -8,7 +8,15 @@ interface IActivationToken {
     activationCode: number;
 }
 
-export const createActivationToken = (user: IUserRegister): IActivationToken => {
+export interface IUserActiovation extends IUserRegister {
+  picture? : {
+    url : string
+    public_id : string
+  };
+  bio? : string;
+}
+
+export const createActivationToken = (user: IUserActiovation): IActivationToken => {
   const activationCode = Math.floor(
     100000 + Math.random() * (999999 - 100000 + 1) + 100000
   );
