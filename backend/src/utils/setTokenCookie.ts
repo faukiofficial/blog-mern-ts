@@ -5,14 +5,14 @@ import { redis } from "../config/redis";
 
 export const setTokenCookie = (user: IUser, res: Response) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, {
-    expiresIn: "10d",
+    expiresIn: "5m",
   });
 
   const refreshToken = jwt.sign(
     { id: user._id },
     process.env.JWT_SECRET_REFRESH_TOKEN as string,
     {
-      expiresIn: "1m",
+      expiresIn: "10d",
     }
   );
 
@@ -20,16 +20,16 @@ export const setTokenCookie = (user: IUser, res: Response) => {
     httpOnly: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 10 * 60 * 24 * 60 * 1000,
-    expires: new Date(Date.now() + 10 * 60 * 24 * 60 * 1000),
+    maxAge: 5 * 60 * 1000,
+    expires: new Date(Date.now() + 5 * 60 * 1000),
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 30 * 60 * 1000,
-    expires: new Date(Date.now() + 1 * 60 * 1000),
+    maxAge: 10 * 60 * 24 * 60 * 1000,
+    expires: new Date(Date.now() + 10 * 60 * 24 * 60 * 1000),
   });
 
   if (user.password) user.password = undefined;

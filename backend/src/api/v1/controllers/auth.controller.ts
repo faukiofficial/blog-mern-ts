@@ -199,7 +199,7 @@ export const googleLogin = async (
       });
     }
 
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
     if (user) {
       if (user.picture && user.picture.url && !user.picture.public_id) {
@@ -216,7 +216,8 @@ export const googleLogin = async (
         },
       });
 
-      setTokenCookie(newUser, res);
+      user = newUser;
+      setTokenCookie(user, res);
     }
   } catch (error) {
     console.log(error);
