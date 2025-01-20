@@ -6,6 +6,8 @@ import User, { IUser } from "../models/user.model";
 import { createActivationToken } from "../../../utils/createActivationToken";
 import sendMail from "../../../utils/sendMail";
 import { setTokenCookie } from "../../../utils/setTokenCookie";
+import { deleteTokenCookie } from "../../../utils/deleteTokenCookie";
+import { redis } from "../../../config/redis";
 
 // Register
 export interface IUserRegister {
@@ -168,6 +170,28 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     return res.status(500).json({
       success: false,
       message: "Login failed",    
+    });
+  }
+};
+
+// Logout
+export const logoutUser = async (req: any, res: Response): Promise<any> => {
+  try {
+    deleteTokenCookie(res);
+
+    const userId = req.user?._id || "";
+
+    redis.del(userId);
+    
+    return res.status(200).json({
+      success: true,
+      message: "Logout successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Logout failed",
     });
   }
 };
