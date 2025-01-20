@@ -16,7 +16,10 @@ export interface IUserRegister {
   password: string;
 }
 
-export const registerUser = async (req: Request, res: Response): Promise<any> => {
+export const registerUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { name, email, password } = req.body;
 
@@ -80,14 +83,17 @@ interface IActivationUser {
   activationCode: string;
 }
 
-export const activateUser = async (req: Request, res: Response): Promise<any> => {
+export const activateUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { activationCode, activationToken } = req.body as IActivationUser;
 
-    const newUser: { user: IUser; activationCode: string} = jwt.verify(
+    const newUser: { user: IUser; activationCode: string } = jwt.verify(
       activationToken,
       process.env.ACTIVATION_TOKEN_SECRET as string
-    ) as { user: IUser; activationCode: string};
+    ) as { user: IUser; activationCode: string };
 
     if (newUser.activationCode != activationCode) {
       return res.status(400).json({
@@ -118,7 +124,6 @@ export const activateUser = async (req: Request, res: Response): Promise<any> =>
       message: "Activate successfully",
       user,
     });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -164,12 +169,11 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
     }
 
     setTokenCookie(user, res);
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       success: false,
-      message: "Login failed",    
+      message: "Login failed",
     });
   }
 };
@@ -181,7 +185,10 @@ interface IGoogleLoginData {
   picture: string;
 }
 
-export const googleLogin = async (req: Request, res: Response): Promise<any> => {
+export const googleLogin = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { email, name, picture } = req.body as IGoogleLoginData;
 
@@ -194,22 +201,23 @@ export const googleLogin = async (req: Request, res: Response): Promise<any> => 
 
     const user = await User.findOne({ email });
 
-    if (user && user.picture && !user.picture.public_id) {
-      user.picture.url = picture;
-      user.save();
+    if (user) {
+      if (user.picture && user.picture.url && !user.picture.public_id) {
+        user.picture.url = picture;
+        user.save();
+      }
       setTokenCookie(user, res);
     } else {
       const newUser = await User.create({
         name,
         email,
-        picture : {
-          url: picture
+        picture: {
+          url: picture,
         },
       });
 
       setTokenCookie(newUser, res);
     }
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -227,7 +235,7 @@ export const logoutUser = async (req: any, res: Response): Promise<any> => {
     const userId = req.user?._id || "";
 
     redis.del(userId);
-    
+
     return res.status(200).json({
       success: true,
       message: "Logout successfully",
