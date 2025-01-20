@@ -28,13 +28,13 @@ export const setTokenCookie = (user: IUser, res: Response) => {
     httpOnly: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 7 * 60 * 24 * 60 * 1000,
+    maxAge: 7 * 60 * 24 * 60 * 1000, // 7 days
     expires: new Date(Date.now() + 7 * 60 * 24 * 60 * 1000),
   });
 
   if (user.password) user.password = undefined;
 
-  redis.set(user._id, JSON.stringify(user) as any, "EX", 7 * 60 * 24 * 60);
+  redis.set(user._id, JSON.stringify(user) as any, "EX", 7 * 60 * 24 * 60); // 7 days
 
   return res.status(200).json({
     success: true,

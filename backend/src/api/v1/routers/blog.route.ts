@@ -5,8 +5,8 @@ import { upload } from "./user.route";
 import { validateRole } from "../../../middlewares/validateRole";
 const route = express.Router();
 
-route.post("/", checkAuthAndRefreshToken, validateRole(["admin"]), upload.single("coverImage"), createBlog);
-route.get("/:id", getSingleBlog);
+route.post("/", checkAuthAndRefreshToken, validateRole(["admin"]), upload.single("coverImage"), createBlog); // done
+route.get("/:id", getSingleBlog); // done
 
 
 export default route;
