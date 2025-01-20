@@ -6,7 +6,7 @@ const route = express.Router();
 route.post("/register", registerUser); // done
 route.post("/activate", activateUser); // done
 route.post("/login", loginUser); // done
-route.post("/google-login", googleLogin);
+route.post("/google-login", googleLogin); // done
 route.post("/logout", checkAuthAndRefreshToken, logoutUser); // done
 
 export default route

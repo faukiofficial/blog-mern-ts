@@ -65,6 +65,7 @@ export const checkAuthAndRefreshToken = async (
         }
       }
     } catch (error) {
+      console.log("Error in checkAuthAndRefreshToken: ", error);
       return res.status(401).json({
         success: false,
         message: "Unauthorized",

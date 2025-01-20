@@ -13,7 +13,7 @@ export const uploadImage = async (file: any, folder: string) => {
     const result = await cloudinary.uploader.upload(file, { folder: folder });
     return result;
   } catch (error) {
-    console.log(error);
+    console.log("Error in uploadImage: ", error);
   }
 };
 
@@ -21,6 +21,6 @@ export const deleteImage = async (public_id: string) => {
   try {
     return await cloudinary.uploader.destroy(public_id);
   } catch (error) {
-    console.log(error);
+    console.log("Error in deleteImage: ", error);
   }
 };

@@ -69,7 +69,7 @@ export const registerUser = async (
       activationToken: activationToken.token,
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in register controller: ", error);
     return res.status(500).json({
       success: false,
       message: "Register failed",
@@ -125,7 +125,7 @@ export const activateUser = async (
       user,
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in activate controller: ", error);
     return res.status(500).json({
       success: false,
       message: "Activate failed",
@@ -170,7 +170,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
 
     setTokenCookie(user, res);
   } catch (error) {
-    console.log(error);
+    console.log("Error in login controller: ", error);
     return res.status(500).json({
       success: false,
       message: "Login failed",
@@ -220,7 +220,7 @@ export const googleLogin = async (
       setTokenCookie(user, res);
     }
   } catch (error) {
-    console.log(error);
+    console.log("Error in google login controller: ", error);
     return res.status(500).json({
       success: false,
       message: "Google login failed",
@@ -242,7 +242,7 @@ export const logoutUser = async (req: any, res: Response): Promise<any> => {
       message: "Logout successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in logout controller: ", error);
     return res.status(500).json({
       success: false,
       message: "Logout failed",

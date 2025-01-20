@@ -10,12 +10,13 @@ import { deleteTokenCookie } from "../../../utils/deleteTokenCookie";
 import { redis } from "../../../config/redis";
 
 // Me
-export const me = async (req: any, res: Response) => {
+export const me = async (req: any, res: Response) : Promise<any> => {
   try {
-    const user = await userModel.findById(req.user._id).select("-password");
-    res.status(200).json({ success: true, data: user });
+    const user = req.user;
+    
+    res.status(200).json({ success: true, user });
   } catch (error) {
-    console.log(error);
+    console.log("Error in me controller: ", error);
     res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
@@ -124,8 +125,10 @@ export const updateUser = async (req: any, res: Response) : Promise<any> => {
     res
       .status(200)
       .json(response);
+
+      await redis.set(req.user._id, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
   } catch (error) {
-    console.log(error);
+    console.log("Error in update user controller: ", error);
     res.status(500).json({ success: false, message: "Update user failed" });
   }
 };
@@ -165,13 +168,13 @@ export const activateNewEmail = async (req: any, res: Response) : Promise<any> =
     user.email = newUser.user.email;
 
     await user.save();
-    await redis.set(req.user._id, JSON.stringify(user));
+    await redis.set(req.user._id, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
 
     res
       .status(200)
       .json({ success: true, message: "Email activated successfully", user });
   } catch (error) {
-    console.log(error);
+    console.log("Error in activate new email controller: ", error);
     res
       .status(500)
       .json({ success: false, message: "Email activation failed" });
@@ -240,7 +243,7 @@ export const updatePassword = async (req: any, res: Response) : Promise<any> => 
       activationToken: activationToken.token,
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in update password controller: ", error);
     res
       .status(500)
       .json({ success: false, message: "Change password request failed" });
@@ -293,7 +296,7 @@ export const activatePasswordChange = async (req: any, res: Response) : Promise<
       .status(200)
       .json({ success: true, message: "Password changed successfully", user });
   } catch (error) {
-    console.log(error);
+    console.log("Error in activate password change controller: ", error);
     res.status(500).json({ success: false, message: "Password change failed" });
   }
 };
@@ -352,7 +355,7 @@ export const forgetPassword = async (req: any, res: Response) : Promise<any> => 
       activationToken: activationToken.token,
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in forget password controller: ", error);
     res
       .status(500)
       .json({ success: false, message: "Change password request failed" });
@@ -399,7 +402,7 @@ export const activateForgetPassword = async (req: any, res: Response) : Promise<
       .status(200)
       .json({ success: true, message: "Password changed successfully", user });
   } catch (error) {
-    console.log(error);
+    console.log("Error in activate password change controller: ", error);
     res.status(500).json({ success: false, message: "Password change failed" });
   }
 };
@@ -425,7 +428,7 @@ export const deleteAccount = async (req: any, res: Response) : Promise<any> => {
       .status(200)
       .json({ success: true, message: "Account deleted successfully" });
   } catch (error) {
-    console.log(error);
+    console.log("Error in delete account controller: ", error);
     res
       .status(500)
       .json({ success: false, message: "Account deletion failed" });
