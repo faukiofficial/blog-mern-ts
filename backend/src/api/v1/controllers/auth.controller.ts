@@ -234,7 +234,7 @@ export const logoutUser = async (req: any, res: Response): Promise<any> => {
 
     const userId = req.user?._id || "";
 
-    redis.del(userId);
+    await redis.del(userId);
 
     return res.status(200).json({
       success: true,

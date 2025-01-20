@@ -28,8 +28,10 @@ app.get("/test", (req: Request, res: Response) => {
 
 const API_V1 = "/api/v1";
 import authRoutes from "./api/v1/routers/auth.route";
+import userRoutes from "./api/v1/routers/user.route";
 
 app.use(`${API_V1}/auth`, authRoutes);
+app.use(`${API_V1}/users`, userRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.resolve();

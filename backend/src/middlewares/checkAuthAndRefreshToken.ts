@@ -2,12 +2,13 @@ import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import { redis } from "../config/redis";
 import userModel from "../api/v1/models/user.model";
 import { setTokenCookie } from "../utils/setTokenCookie";
+import { NextFunction, Response } from "express";
 
 export const checkAuthAndRefreshToken = async (
   req: any,
-  res: any,
-  next: any
-) => {
+  res: Response,
+  next: NextFunction
+) : Promise<any> => {
   const token = req.cookies.token;
   const refreshToken = req.cookies.refreshToken;
 

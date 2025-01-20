@@ -3,9 +3,9 @@ import { registerUser, activateUser, loginUser, logoutUser } from "../controller
 import { checkAuthAndRefreshToken } from "../../../middlewares/checkAuthAndRefreshToken";
 const route = express.Router();
 
-route.post("/register", registerUser);
-route.post("/activate", activateUser);
-route.post("/login", loginUser);
-route.post("/logout", checkAuthAndRefreshToken, logoutUser);
+route.post("/register", registerUser); // done
+route.post("/activate", activateUser); // done
+route.post("/login", loginUser); // done
+route.post("/logout", checkAuthAndRefreshToken, logoutUser); // done
 
 export default route

@@ -7,6 +7,7 @@ import ejs from "ejs";
 import path from "path";
 import sendMail from "../../../utils/sendMail";
 import { deleteTokenCookie } from "../../../utils/deleteTokenCookie";
+import { redis } from "../../../config/redis";
 
 // Me
 export const me = async (req: any, res: Response) => {
@@ -60,7 +61,11 @@ export const updateUser = async (req: any, res: Response) : Promise<any> => {
       }
     }
 
-    if (email !== user.email) {
+    let message = "User updated successfully";
+    let activationToken;
+
+    if (email && email !== user.email) {
+      message = "Change email request sent, check your new email";
       const isEmailExist = await userModel.findOne({ email });
 
       if (isEmailExist) {
@@ -69,7 +74,7 @@ export const updateUser = async (req: any, res: Response) : Promise<any> => {
           .json({ success: false, message: "Email already exist" });
       }
 
-      const activationToken = createActivationToken({
+      activationToken = createActivationToken({
         name: name || user.name,
         email: email || user.email,
         picture,
@@ -100,15 +105,25 @@ export const updateUser = async (req: any, res: Response) : Promise<any> => {
     }
 
     user.name = name || user.name;
-    user.email = email || user.email;
     user.bio = bio || user.bio;
     user.picture = picture || user.picture;
 
     await user.save();
 
+    const response = activationToken ? {
+      success: true,
+      message,
+      user,
+      activationToken: activationToken.token,
+    } : {
+      success: true,
+      message,
+      user,
+    }
+
     res
       .status(200)
-      .json({ success: true, message: "User updated successfully", user });
+      .json(response);
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: "Update user failed" });
@@ -124,6 +139,8 @@ export const activateNewEmail = async (req: any, res: Response) : Promise<any> =
       activationToken,
       process.env.ACTIVATION_TOKEN_SECRET as string
     ) as JwtPayload;
+
+    console.log(newUser)
 
     if (!newUser) {
       return res
@@ -145,9 +162,10 @@ export const activateNewEmail = async (req: any, res: Response) : Promise<any> =
         .json({ success: false, message: "User not found" });
     }
 
-    user.email = newUser.email;
+    user.email = newUser.user.email;
 
     await user.save();
+    await redis.set(req.user._id, JSON.stringify(user));
 
     res
       .status(200)
@@ -219,6 +237,7 @@ export const updatePassword = async (req: any, res: Response) : Promise<any> => 
     res.status(200).json({
       success: true,
       message: "Change password request sent, check email",
+      activationToken: activationToken.token,
     });
   } catch (error) {
     console.log(error);
@@ -231,7 +250,13 @@ export const updatePassword = async (req: any, res: Response) : Promise<any> => 
 // update password activation
 export const activatePasswordChange = async (req: any, res: Response) : Promise<any> => {
   try {
-    const { activationCode, activationToken } = req.body;
+    const { activationCode, activationToken, newPassword } = req.body;
+
+    if (!activationCode || !activationToken || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Please provide all fields" });
+    }
 
     const newUser = jwt.verify(
       activationToken,
@@ -258,9 +283,11 @@ export const activatePasswordChange = async (req: any, res: Response) : Promise<
         .json({ success: false, message: "User not found" });
     }
 
-    user.password = newUser.password;
+    user.password = newPassword;
 
     await user.save();
+
+    user.password = undefined;
 
     res
       .status(200)
@@ -322,6 +349,7 @@ export const forgetPassword = async (req: any, res: Response) : Promise<any> => 
     res.status(200).json({
       success: true,
       message: "Change password request sent, check email",
+      activationToken: activationToken.token,
     });
   } catch (error) {
     console.log(error);
@@ -361,9 +389,11 @@ export const activateForgetPassword = async (req: any, res: Response) : Promise<
         .json({ success: false, message: "User not found" });
     }
 
-    user.password = newUser.password;
+    user.password = newPassword;
 
     await user.save();
+
+    user.password = undefined;
 
     res
       .status(200)
@@ -388,6 +418,8 @@ export const deleteAccount = async (req: any, res: Response) : Promise<any> => {
     await userModel.findByIdAndDelete(req.user._id);
 
     deleteTokenCookie(res);
+
+    await redis.del(req.user._id);
 
     res
       .status(200)

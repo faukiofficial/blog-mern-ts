@@ -14,28 +14,28 @@ const router = express.Router();
 import multer from "multer";
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+export const upload = multer({ storage });
 
-router.get("/me", checkAuthAndRefreshToken, me);
+router.get("/me", checkAuthAndRefreshToken, me); // done
 router.put(
   "/update",
   checkAuthAndRefreshToken,
   upload.single("picture"),
   updateUser
-);
-router.post("/activate-new-email", checkAuthAndRefreshToken, activateNewEmail);
-router.post("/update-password", checkAuthAndRefreshToken, updatePassword);
+); // done
+router.post("/activate-new-email", checkAuthAndRefreshToken, activateNewEmail); // done
+router.post("/update-password", checkAuthAndRefreshToken, updatePassword); // done
 router.post(
   "/activate-password-change",
   checkAuthAndRefreshToken,
   activatePasswordChange
-);
-router.post("/forget-password", checkAuthAndRefreshToken, forgetPassword);
+); // done
+router.post("/forget-password", checkAuthAndRefreshToken, forgetPassword); // done
 router.post(
   "/activate-forget-password",
   checkAuthAndRefreshToken,
   activateForgetPassword
-);
-router.delete("/delete-account", checkAuthAndRefreshToken, deleteAccount);
+); // done
+router.delete("/delete-account", checkAuthAndRefreshToken, deleteAccount); // done
 
 export default router;

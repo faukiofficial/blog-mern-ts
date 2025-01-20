@@ -9,11 +9,6 @@ export interface IComment extends mongoose.Document {
 }
 
 const commentSchema: mongoose.Schema<IComment> = new mongoose.Schema({
-    blog : {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Blog',
-        required: true
-    },
     user : {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -23,10 +18,11 @@ const commentSchema: mongoose.Schema<IComment> = new mongoose.Schema({
         type: String,
         required: true
     },
-    likes : {
-        type: Number,
+    likes : [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         default: 0
-    },
+    }],
     replies : [
         {
             type: mongoose.Schema.Types.ObjectId,
