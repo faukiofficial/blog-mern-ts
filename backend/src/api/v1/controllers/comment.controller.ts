@@ -6,6 +6,7 @@ import { populateBlog } from "./blog.controller";
 
 // create comment
 interface ICommentData {
+  blog: string;
   content: string;
 }
 
@@ -21,7 +22,11 @@ export const createComment = async (req: any, res: Response): Promise<any> => {
       });
     }
 
-    const comment = await Comment.create({ content, user: req.user._id });
+    const comment = await Comment.create({
+      blog: blogId,
+      content,
+      user: req.user._id,
+    });
 
     // push comment to blog.comments
     if (blog.comments) {
@@ -30,13 +35,18 @@ export const createComment = async (req: any, res: Response): Promise<any> => {
     }
 
     const newBlogData = await populateBlog(blogId);
-    await redis.set(`blog-${blogId}`, JSON.stringify(newBlogData), "EX", 7 * 24 * 60 * 60);
+    await redis.set(
+      `blog-${blogId}`,
+      JSON.stringify(newBlogData),
+      "EX",
+      7 * 24 * 60 * 60
+    );
 
     return res.status(201).json({
-        success: true,
-        message: "Comment created successfully",
-        blog: newBlogData,
-        comment,
+      success: true,
+      message: "Comment created successfully",
+      blog: newBlogData,
+      comment,
     });
   } catch (error) {
     res.status(400).json({
@@ -47,7 +57,7 @@ export const createComment = async (req: any, res: Response): Promise<any> => {
 };
 
 // get single comment
-export const getComment = async (req: any, res: Response) : Promise<any> => {
+export const getComment = async (req: any, res: Response): Promise<any> => {
   try {
     const commentId = req.params.commentId;
     const comment = await Comment.findById(commentId);
@@ -70,7 +80,7 @@ export const getComment = async (req: any, res: Response) : Promise<any> => {
   }
 };
 
-export const deleteComment = async (req: any, res: Response) : Promise<any> => {
+export const deleteComment = async (req: any, res: Response): Promise<any> => {
   try {
     const commentId = req.params.commentId;
     const blogId = req.params.blogId;
@@ -93,7 +103,9 @@ export const deleteComment = async (req: any, res: Response) : Promise<any> => {
 
     // remove comment from blog.comments
     if (blog.comments) {
-      blog.comments = blog.comments.filter((id: object) => id.toString() !== commentId);
+      blog.comments = blog.comments.filter(
+        (id: object) => id.toString() !== commentId
+      );
       await blog.save();
     }
 
@@ -105,7 +117,12 @@ export const deleteComment = async (req: any, res: Response) : Promise<any> => {
     });
 
     const populatedBlog = await populateBlog(blogId);
-    await redis.set(`blog-${blog._id}`, JSON.stringify(populatedBlog), "EX", 7 * 24 * 60 * 60);
+    await redis.set(
+      `blog-${blog._id}`,
+      JSON.stringify(populatedBlog),
+      "EX",
+      7 * 24 * 60 * 60
+    );
 
     return null;
   } catch (error) {
@@ -116,9 +133,8 @@ export const deleteComment = async (req: any, res: Response) : Promise<any> => {
   }
 };
 
-
 // like comment
-export const likeComment = async (req: any, res: Response) : Promise<any> => {
+export const likeComment = async (req: any, res: Response): Promise<any> => {
   try {
     const commentId = req.params.commentId;
     const comment = await Comment.findById(commentId);
@@ -129,16 +145,21 @@ export const likeComment = async (req: any, res: Response) : Promise<any> => {
       });
     }
     comment.likes && comment.likes.push(req.user._id as object);
-    
+
     await comment.save();
-    
+
     res.status(200).json({
       success: true,
       message: "Comment liked successfully",
     });
 
     const populatedBlog = await populateBlog(comment.blog as string);
-    await redis.set(`blog-${comment.blog}`, JSON.stringify(populatedBlog), "EX", 7 * 24 * 60 * 60);
+    await redis.set(
+      `blog-${comment.blog}`,
+      JSON.stringify(populatedBlog),
+      "EX",
+      7 * 24 * 60 * 60
+    );
 
     return null;
   } catch (error) {
