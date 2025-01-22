@@ -61,8 +61,6 @@ export const createBlog = async (req: any, res: Response): Promise<any> => {
   try {
     const { title, category, tags, content } = req.body as IBlogData;
 
-    console.log("tags", typeof tags);
-
     const blogData: IBlogData = {
       title,
       category,
@@ -93,15 +91,109 @@ export const createBlog = async (req: any, res: Response): Promise<any> => {
     });
 
     const populatedBlog = await populateBlog(blog._id);
+
     await redis.set(
       blog._id,
       JSON.stringify(populatedBlog),
       "EX",
       7 * 24 * 60 * 60
     ); // 7 days
+    
+    // push the blog to "AllBlogs" in redis
+    await redis.lpush("AllBlogs", JSON.stringify(populatedBlog));
+
   } catch (error) {
     console.log("Error in create blog controller", error);
     res.status(400).json({ success: false, message: "Failed to create blog" });
+  }
+};
+
+// get all blogs
+interface IGetAllBlogs {
+  querySearch?: string;
+  category?: string;
+  tags?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+}
+
+export const getAllBlogs = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { querySearch, category, tags, page = 1, limit = 10, sort = "desc"}  = req.query as IGetAllBlogs;
+
+    const filters : any = {};
+
+    if (querySearch) {
+      filters.$or = [
+        { title: { $regex: querySearch, $options: "i" } },
+        { content: { $regex: querySearch, $options: "i" } },
+      ];
+    }
+
+    if (category) {
+      filters.category = category;
+    }
+
+    if (tags) {
+      const tagsArray = Array.isArray(tags) ? tags : [tags];
+      filters.tags = { $all: tagsArray };
+    }
+
+    // pagination and sorting
+    const pageNumber = page || 1;
+    const pageSize = limit || 10;
+    const skip = (pageNumber - 1) * pageSize;
+    const sortOrder = sort === "asc" ? 1 : -1;
+
+    const chaceKey = `getAllBlogs-${JSON.stringify(filters)}-${pageNumber}-${pageSize}-${sortOrder}`;
+
+    const cachedBlogs = await redis.get(chaceKey);
+
+    if (cachedBlogs) {
+      return res.status(200).json({
+        success: true,
+        from: "redis",
+        message: "Blogs fetched successfully",
+        blogs: JSON.parse(cachedBlogs),
+        totalBlogs: await Blog.countDocuments(filters),
+        totalPages: Math.ceil(await Blog.countDocuments(filters) / pageSize),
+        currentPage: pageNumber,
+      });
+    }
+
+    const blogs = await Blog.find().select("-comments").populate({
+      path: "author",
+      select: "name picture",
+    }).sort({ createdAt: sortOrder }).skip(skip).limit(pageSize);
+
+    const totalBlogs = await Blog.countDocuments(filters);
+
+    
+
+    const result = {
+      blogs,
+      totalBlogs,
+      totalPages: Math.ceil(totalBlogs / pageSize),
+      currentPage: pageNumber,
+    };
+
+    res.status(200).json({
+      success: true,
+      from: "mongo",
+      message: "Blogs fetched successfully",
+      ...result,
+    });
+
+    await redis.set(
+      chaceKey,
+      JSON.stringify(blogs),
+      "EX",
+      7 * 24 * 60 * 60
+    );
+  } catch (error) {
+    console.log("Error in get all blogs controller", error);
+    res.status(400).json({ success: false, message: "Failed to fetch blogs" });
   }
 };
 
@@ -140,7 +232,6 @@ export const getSingleBlog = async (req: any, res: Response): Promise<any> => {
 };
 
 // update blog
-
 export const updateBlog = async (req: any, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
@@ -191,6 +282,8 @@ export const updateBlog = async (req: any, res: Response): Promise<any> => {
 
     const populatedBlog = await populateBlog(id);
     await redis.set(id, JSON.stringify(populatedBlog), "EX", 7 * 24 * 60 * 60); // 7 days
+    // update juga di "AllBlogs" di redis
+    await redis.lset("AllBlogs", id, JSON.stringify(populatedBlog));
   } catch (error) {
     console.log("Error in update blog controller", error);
     res.status(400).json({ success: false, message: "Failed to update blog" });
@@ -222,6 +315,7 @@ export const deleteBlog = async (req: any, res: Response): Promise<any> => {
     });
 
     await redis.del(id);
+    await redis.lrem("AllBlogs", 0, id);
   } catch (error) {
     console.log("Error in delete blog controller", error);
     res.status(400).json({ success: false, message: "Failed to delete blog" });
