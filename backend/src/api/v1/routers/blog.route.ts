@@ -1,5 +1,5 @@
 import express from "express"
-import { createBlog, getAllBlogs, getSingleBlog, updateBlog, deleteBlog } from "../controllers/blog.controller";
+import { createBlog, getAllBlogs, getSingleBlog, updateBlog, deleteBlog, likeBlog } from "../controllers/blog.controller";
 import { checkAuthAndRefreshToken } from "../../../middlewares/checkAuthAndRefreshToken";
 import { upload } from "./user.route";
 import { validateRole } from "../../../middlewares/validateRole";
@@ -10,5 +10,6 @@ route.get("/", getAllBlogs); // done
 route.get("/:id", getSingleBlog); // done
 route.put("/:id", checkAuthAndRefreshToken, validateRole(["admin"]), upload.single("coverImage"), updateBlog); // done
 route.delete("/:id", checkAuthAndRefreshToken, validateRole(["admin"]), deleteBlog); // done
+route.put("/like/:id", checkAuthAndRefreshToken, likeBlog);
 
 export default route;

@@ -408,3 +408,53 @@ export const deleteBlog = async (req: any, res: Response): Promise<any> => {
     res.status(400).json({ success: false, message: "Failed to delete blog" });
   }
 };
+
+// like blog
+export const likeBlog = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+
+    const blog = await Blog.findById(id);
+
+    if (!blog) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Blog not found" });
+    }
+
+    blog.likes && blog.likes.push(req.user._id);
+    await blog.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Blog liked successfully",
+    });
+
+    const populatedBlog = await populateBlog(id);
+    await redis.set(
+      `blog-${id}`,
+      JSON.stringify(populatedBlog),
+      "EX",
+      7 * 24 * 60 * 60
+    ); // 7 days
+
+    // Update list AllBlogs di Redis
+    const allBlogs = await redis.lrange("AllBlogs", 0, -1); // Ambil semua elemen dari list
+    const updatedBlogs = allBlogs.map((blog) => {
+      const parsedBlog = JSON.parse(blog);
+      if (parsedBlog._id === id) {
+        return JSON.stringify(populatedBlog); // Perbarui blog yang sesuai
+      }
+      return blog; // Biarkan elemen lainnya tetap sama
+    });
+
+    // Hapus list lama dan tambahkan list baru
+    await redis.del("AllBlogs");
+    await redis.rpush("AllBlogs", ...updatedBlogs);
+
+    return null;
+  } catch (error) {
+    console.log("Error in like blog controller", error);
+    res.status(400).json({ success: false, message: "Failed to like blog" });
+  }
+};

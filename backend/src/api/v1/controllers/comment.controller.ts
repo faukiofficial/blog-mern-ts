@@ -115,3 +115,36 @@ export const deleteComment = async (req: any, res: Response) : Promise<any> => {
     });
   }
 };
+
+
+// like comment
+export const likeComment = async (req: any, res: Response) : Promise<any> => {
+  try {
+    const commentId = req.params.commentId;
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+    comment.likes && comment.likes.push(req.user._id as object);
+    
+    await comment.save();
+    
+    res.status(200).json({
+      success: true,
+      message: "Comment liked successfully",
+    });
+
+    const populatedBlog = await populateBlog(comment.blog as string);
+    await redis.set(`blog-${comment.blog}`, JSON.stringify(populatedBlog), "EX", 7 * 24 * 60 * 60);
+
+    return null;
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to like comment",
+    });
+  }
+};

@@ -1,13 +1,17 @@
 import mongoose from 'mongoose';
 
 export interface IComment extends mongoose.Document {
+    blog: string;
     user: object;
     content: string;
-    likes?: number;
+    likes?: object[];
     replies?: object[];
 }
 
 const commentSchema: mongoose.Schema<IComment> = new mongoose.Schema({
+    blog : {
+        type: String,
+    },
     user : {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -19,8 +23,7 @@ const commentSchema: mongoose.Schema<IComment> = new mongoose.Schema({
     },
     likes : [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        default: 0
+        ref: 'User'
     }],
     replies : [
         {

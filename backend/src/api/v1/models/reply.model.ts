@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 
 export interface IReply extends mongoose.Document {
-    comment: object,
     user: Object,
-    likes?: string[],
+    likes?: object[],
     content: string
 }
 
