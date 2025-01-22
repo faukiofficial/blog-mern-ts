@@ -101,6 +101,8 @@ export const createBlog = async (req: any, res: Response): Promise<any> => {
 
     // push the blog to "AllBlogs" in redis
     await redis.lpush("AllBlogs", JSON.stringify(populatedBlog));
+
+    return null;
   } catch (error) {
     console.log("Error in create blog controller", error);
     res.status(400).json({ success: false, message: "Failed to create blog" });
@@ -245,6 +247,7 @@ export const getAllBlogs = async (req: any, res: Response): Promise<any> => {
       await redis.rpush("AllBlogs", JSON.stringify(blog));
     }
     await redis.expire("AllBlogs", 7 * 24 * 60 * 60);
+    return null;
   } catch (error) {
     console.log("Error in get all blogs controller", error);
     res.status(400).json({ success: false, message: "Failed to fetch blogs" });
@@ -355,6 +358,7 @@ export const updateBlog = async (req: any, res: Response): Promise<any> => {
     // Hapus list lama dan tambahkan list baru
     await redis.del("AllBlogs");
     await redis.rpush("AllBlogs", ...updatedBlogs);
+    return null;
   } catch (error) {
     console.log("Error in update blog controller", error);
     res.status(400).json({ success: false, message: "Failed to update blog" });
@@ -398,6 +402,7 @@ export const deleteBlog = async (req: any, res: Response): Promise<any> => {
     if (filteredBlogs.length > 0) {
       await redis.rpush("AllBlogs", ...filteredBlogs);
     }
+    return null;
   } catch (error) {
     console.log("Error in delete blog controller", error);
     res.status(400).json({ success: false, message: "Failed to delete blog" });

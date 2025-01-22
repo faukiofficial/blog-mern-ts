@@ -30,9 +30,9 @@ export const createComment = async (req: any, res: Response): Promise<any> => {
     }
 
     const newBlogData = await populateBlog(blogId);
-    await redis.set(blogId, JSON.stringify(newBlogData), "EX", 7 * 24 * 60 * 60);
+    await redis.set(`blog-${blogId}`, JSON.stringify(newBlogData), "EX", 7 * 24 * 60 * 60);
 
-    res.status(201).json({
+    return res.status(201).json({
         success: true,
         message: "Comment created successfully",
         blog: newBlogData,
@@ -57,7 +57,7 @@ export const getComment = async (req: any, res: Response) : Promise<any> => {
         message: "Comment not found",
       });
     }
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Comment fetched successfully",
       comment,
@@ -104,7 +104,10 @@ export const deleteComment = async (req: any, res: Response) : Promise<any> => {
       message: "Comment deleted successfully",
     });
 
-    await redis.set(blog._id, JSON.stringify(blog), "EX", 7 * 24 * 60 * 60);
+    const populatedBlog = await populateBlog(blogId);
+    await redis.set(`blog-${blog._id}`, JSON.stringify(populatedBlog), "EX", 7 * 24 * 60 * 60);
+
+    return null;
   } catch (error) {
     res.status(400).json({
       success: false,
