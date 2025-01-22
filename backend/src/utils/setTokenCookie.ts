@@ -34,7 +34,7 @@ export const setTokenCookie = (user: IUser, res: Response) => {
 
   if (user.password) user.password = undefined;
 
-  redis.set(user._id, JSON.stringify(user) as any, "EX", 7 * 60 * 24 * 60); // 7 days
+  redis.set(`user-${user._id}`, JSON.stringify(user) as any, "EX", 7 * 60 * 24 * 60); // 7 days
 
   return res.status(200).json({
     success: true,

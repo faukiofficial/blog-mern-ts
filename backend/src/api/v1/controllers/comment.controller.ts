@@ -1,7 +1,114 @@
 import Comment from "../models/comment.model";
+import Blog from "../models/blog.model";
+import { Response } from "express";
+import { redis } from "../../../config/redis";
+import { populateBlog } from "./blog.controller";
 
 // create comment
 interface ICommentData {
-    user: string;
-    content: string;
+  content: string;
 }
+
+export const createComment = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { content } = req.body as ICommentData;
+    const blogId = req.params.blogId;
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    const comment = await Comment.create({ content, user: req.user._id });
+
+    // push comment to blog.comments
+    if (blog.comments) {
+      blog.comments.push(comment._id as object);
+      await blog.save();
+    }
+
+    const newBlogData = await populateBlog(blogId);
+    await redis.set(blogId, JSON.stringify(newBlogData), "EX", 7 * 24 * 60 * 60);
+
+    res.status(201).json({
+        success: true,
+        message: "Comment created successfully",
+        blog: newBlogData,
+        comment,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to create comment",
+    });
+  }
+};
+
+// get single comment
+export const getComment = async (req: any, res: Response) : Promise<any> => {
+  try {
+    const commentId = req.params.commentId;
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "Comment fetched successfully",
+      comment,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to fetch comment",
+    });
+  }
+};
+
+export const deleteComment = async (req: any, res: Response) : Promise<any> => {
+  try {
+    const commentId = req.params.commentId;
+    const blogId = req.params.blogId;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    const blog = await Blog.findById(blogId);
+    if (!blog) {
+      return res.status(404).json({
+        success: false,
+        message: "Blog not found",
+      });
+    }
+
+    // remove comment from blog.comments
+    if (blog.comments) {
+      blog.comments = blog.comments.filter((id: object) => id.toString() !== commentId);
+      await blog.save();
+    }
+
+    await Comment.findByIdAndDelete(commentId);
+
+    res.status(200).json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
+
+    await redis.set(blog._id, JSON.stringify(blog), "EX", 7 * 24 * 60 * 60);
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: "Failed to delete comment",
+    });
+  }
+};

@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 export interface IComment extends mongoose.Document {
-    blog: object;
     user: object;
     content: string;
     likes?: number;

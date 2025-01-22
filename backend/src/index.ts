@@ -30,10 +30,12 @@ const API_V1 = "/api/v1";
 import authRoutes from "./api/v1/routers/auth.route";
 import userRoutes from "./api/v1/routers/user.route";
 import blogRoutes from "./api/v1/routers/blog.route";
+import commentRoutes from "./api/v1/routers/comment.route";
 
 app.use(`${API_V1}/auth`, authRoutes);
 app.use(`${API_V1}/users`, userRoutes);
 app.use(`${API_V1}/blogs`, blogRoutes);
+app.use(`${API_V1}/comments`, commentRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const __dirname = path.resolve();

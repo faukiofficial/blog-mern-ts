@@ -126,7 +126,7 @@ export const updateUser = async (req: any, res: Response) : Promise<any> => {
       .status(200)
       .json(response);
 
-      await redis.set(req.user._id, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
+      await redis.set(`user-${req.user._id}`, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
   } catch (error) {
     console.log("Error in update user controller: ", error);
     res.status(500).json({ success: false, message: "Update user failed" });
@@ -168,7 +168,7 @@ export const activateNewEmail = async (req: any, res: Response) : Promise<any> =
     user.email = newUser.user.email;
 
     await user.save();
-    await redis.set(req.user._id, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
+    await redis.set(`user-${req.user._id}`, JSON.stringify(user), "EX", 7 * 60 * 60 * 24); // 7 days
 
     res
       .status(200)
@@ -422,7 +422,7 @@ export const deleteAccount = async (req: any, res: Response) : Promise<any> => {
 
     deleteTokenCookie(res);
 
-    await redis.del(req.user._id);
+    await redis.del(`user-${req.user._id}`);
 
     res
       .status(200)
